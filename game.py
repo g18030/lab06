@@ -3,7 +3,7 @@ import sys
 
 # --- Constants ---
 WIDTH, HEIGHT = 800, 600
-FPS = 60
+FPS = 40
 
 # Colors
 BLACK = (0, 0, 0)
@@ -11,6 +11,7 @@ WHITE = (255, 255, 255)
 RED = (255, 50, 50)
 YELLOW = (255, 255, 50)
 DARK_BLUE = (10, 10, 40)
+GRAY = (150, 150, 150)
 
 # Paddle settings
 PADDLE_WIDTH = 100
@@ -44,8 +45,10 @@ class BreakoutGame:
         # Load fonts
         try:
             pygame.font.init()
-            self.font = pygame.font.SysFont("Arial", 24, bold=True)
-            self.large_font = pygame.font.SysFont("Arial", 64, bold=True)
+            # Try to find a bold, game-like font
+            font_name = pygame.font.match_font('impact', 'arial', 'verdana')
+            self.font = pygame.font.Font(font_name, 28)
+            self.large_font = pygame.font.Font(font_name, 72)
             self.fonts_loaded = True
         except:
             self.fonts_loaded = False
@@ -196,6 +199,17 @@ class BreakoutGame:
                 self.ball.centerx = self.paddle.centerx
                 self.ball.bottom = self.paddle.top
 
+    def draw_text_with_shadow(self, text, x, y, color=WHITE, shadow_color=BLACK, large=False):
+        """Helper to draw text with a subtle shadow."""
+        font = self.large_font if large else self.font
+        # Draw shadow
+        shadow_surf = font.render(text, True, shadow_color)
+        self.screen.blit(shadow_surf, (x + 2, y + 2))
+        # Draw main text
+        text_surf = font.render(text, True, color)
+        self.screen.blit(text_surf, (x, y))
+        return text_surf.get_width()
+
     def draw(self):
         """Renders the game elements to the screen."""
         self.screen.fill(DARK_BLUE)
@@ -217,26 +231,35 @@ class BreakoutGame:
 
         # Draw UI
         if self.fonts_loaded:
-            score_surf = self.font.render(f"Score: {self.score}", True, WHITE)
-            lives_surf = self.font.render(f"Lives: {self.lives}", True, WHITE)
-            self.screen.blit(score_surf, (20, 20))
-            self.screen.blit(lives_surf, (WIDTH - lives_surf.get_width() - 20, 20))
+            # Score (Top-Left)
+            self.draw_text_with_shadow(f"SCORE: {self.score}", 20, 20, YELLOW)
+            
+            # Lives (Top-Right)
+            lives_text = f"LIVES: {self.lives}"
+            # Calculate width to align right
+            lives_width = self.font.size(lives_text)[0]
+            self.draw_text_with_shadow(lives_text, WIDTH - lives_width - 20, 20, RED)
 
             if self.paused:
-                txt = self.large_font.render("PAUSED", True, WHITE)
-                self.screen.blit(txt, (WIDTH // 2 - txt.get_width() // 2, HEIGHT // 2 - 50))
+                txt = "PAUSED"
+                w = self.large_font.size(txt)[0]
+                self.draw_text_with_shadow(txt, WIDTH // 2 - w // 2, HEIGHT // 2 - 50, WHITE, large=True)
             
             if self.game_over:
-                txt = self.large_font.render("GAME OVER", True, RED)
-                sub = self.font.render("Press 'R' to Restart", True, WHITE)
-                self.screen.blit(txt, (WIDTH // 2 - txt.get_width() // 2, HEIGHT // 2 - 50))
-                self.screen.blit(sub, (WIDTH // 2 - sub.get_width() // 2, HEIGHT // 2 + 40))
+                txt = "GAME OVER"
+                sub = "Press 'R' to Restart"
+                w1 = self.large_font.size(txt)[0]
+                w2 = self.font.size(sub)[0]
+                self.draw_text_with_shadow(txt, WIDTH // 2 - w1 // 2, HEIGHT // 2 - 50, RED, large=True)
+                self.draw_text_with_shadow(sub, WIDTH // 2 - w2 // 2, HEIGHT // 2 + 40, WHITE)
             
             if self.win:
-                txt = self.large_font.render("YOU WIN!", True, YELLOW)
-                sub = self.font.render("Press 'R' to Restart", True, WHITE)
-                self.screen.blit(txt, (WIDTH // 2 - txt.get_width() // 2, HEIGHT // 2 - 50))
-                self.screen.blit(sub, (WIDTH // 2 - sub.get_width() // 2, HEIGHT // 2 + 40))
+                txt = "YOU WIN!"
+                sub = "Press 'R' to Restart"
+                w1 = self.large_font.size(txt)[0]
+                w2 = self.font.size(sub)[0]
+                self.draw_text_with_shadow(txt, WIDTH // 2 - w1 // 2, HEIGHT // 2 - 50, YELLOW, large=True)
+                self.draw_text_with_shadow(sub, WIDTH // 2 - w2 // 2, HEIGHT // 2 + 40, WHITE)
 
         pygame.display.flip()
 
