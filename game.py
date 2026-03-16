@@ -84,8 +84,13 @@ class BreakoutGame:
                 bx = BRICK_OFFSET_LEFT + col * (BRICK_WIDTH + BRICK_PADDING)
                 by = BRICK_OFFSET_TOP + row * (BRICK_HEIGHT + BRICK_PADDING)
                 brick_rect = pygame.Rect(bx, by, BRICK_WIDTH, BRICK_HEIGHT)
-                # Points: Top row (row 0) is 20, others 10
-                points = 20 if row == 0 else 10
+                # Points: Classic Breakout scoring (varied by row)
+                if row == 0: points = 7    # Red
+                elif row == 1: points = 5  # Orange
+                elif row == 2: points = 3  # Yellow
+                elif row == 3: points = 1  # Green
+                else: points = 1           # Blue
+
                 self.bricks.append({
                     "rect": brick_rect, 
                     "color": ROW_COLORS[row], 
@@ -194,6 +199,9 @@ class BreakoutGame:
                 self.game_over = True
             else:
                 self.ball_launched = False
+                # Reset ball physics for next life
+                self.ball_dx = BALL_SPEED_X
+                self.ball_dy = BALL_SPEED_Y
                 # Re-center ball on paddle
                 self.ball.centerx = self.paddle.centerx
                 self.ball.bottom = self.paddle.top
