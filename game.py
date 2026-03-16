@@ -9,12 +9,8 @@ FPS = 60
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 50, 50)
-ORANGE = (255, 165, 0)
 YELLOW = (255, 255, 50)
-GREEN = (50, 255, 50)
-BLUE = (50, 50, 255)
 DARK_BLUE = (10, 10, 40)
-SHADOW_COLOR = (30, 30, 30)
 
 # Paddle settings
 PADDLE_WIDTH = 100
@@ -27,7 +23,7 @@ BALL_SPEED_X = 5
 BALL_SPEED_Y = -5
 
 # Brick settings
-BRICK_ROWS = 5
+BRICK_ROWS = 4
 BRICK_COLS = 10
 BRICK_WIDTH = 75
 BRICK_HEIGHT = 20
@@ -35,13 +31,14 @@ BRICK_PADDING = 5
 BRICK_OFFSET_TOP = 80
 BRICK_OFFSET_LEFT = (WIDTH - (BRICK_COLS * (BRICK_WIDTH + BRICK_PADDING))) // 2
 
-ROW_COLORS = [RED, ORANGE, YELLOW, GREEN, BLUE]
+# Only Red and Yellow
+ROW_COLORS = [RED, RED, YELLOW, YELLOW]
 
 class BreakoutGame:
     def __init__(self):
         pygame.init()
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
-        pygame.display.set_caption("Breakout - Classic Brick Breaker")
+        pygame.display.set_caption("Breakout - Red & Yellow Edition")
         self.clock = pygame.time.Clock()
         
         # Load fonts
@@ -84,16 +81,14 @@ class BreakoutGame:
                 bx = BRICK_OFFSET_LEFT + col * (BRICK_WIDTH + BRICK_PADDING)
                 by = BRICK_OFFSET_TOP + row * (BRICK_HEIGHT + BRICK_PADDING)
                 brick_rect = pygame.Rect(bx, by, BRICK_WIDTH, BRICK_HEIGHT)
-                # Points: Classic Breakout scoring (varied by row)
-                if row == 0: points = 7    # Red
-                elif row == 1: points = 5  # Orange
-                elif row == 2: points = 3  # Yellow
-                elif row == 3: points = 1  # Green
-                else: points = 1           # Blue
+                
+                # Points: Red rows (0, 1) = 10 points, Yellow rows (2, 3) = 5 points
+                color = ROW_COLORS[row]
+                points = 10 if color == RED else 5
 
                 self.bricks.append({
                     "rect": brick_rect, 
-                    "color": ROW_COLORS[row], 
+                    "color": color, 
                     "points": points
                 })
             
@@ -154,7 +149,6 @@ class BreakoutGame:
         # Wall collisions (Left/Right)
         if self.ball.left <= 0 or self.ball.right >= WIDTH:
             self.ball_dx *= -1
-            # Adjust position to prevent getting stuck
             if self.ball.left <= 0: self.ball.left = 0
             if self.ball.right >= WIDTH: self.ball.right = WIDTH
 
@@ -166,14 +160,12 @@ class BreakoutGame:
         # Paddle collision
         if self.ball.colliderect(self.paddle) and self.ball_dy > 0:
             self.ball_dy *= -1
-            # Add some variability to bounce angle based on where it hits the paddle
             hit_pos = (self.ball.centerx - self.paddle.left) / PADDLE_WIDTH
             self.ball_dx = 12 * (hit_pos - 0.5)
 
         # Brick collisions
         for brick in self.bricks[:]:
             if self.ball.colliderect(brick["rect"]):
-                # Determine collision side for realistic bounce
                 dx_left = abs(self.ball.right - brick["rect"].left)
                 dx_right = abs(self.ball.left - brick["rect"].right)
                 dy_top = abs(self.ball.bottom - brick["rect"].top)
@@ -186,7 +178,7 @@ class BreakoutGame:
                 
                 self.score += brick["points"]
                 self.bricks.remove(brick)
-                break # Handle only one collision per frame
+                break 
 
         # Check for Win
         if not self.bricks:
@@ -199,10 +191,8 @@ class BreakoutGame:
                 self.game_over = True
             else:
                 self.ball_launched = False
-                # Reset ball physics for next life
                 self.ball_dx = BALL_SPEED_X
                 self.ball_dy = BALL_SPEED_Y
-                # Re-center ball on paddle
                 self.ball.centerx = self.paddle.centerx
                 self.ball.bottom = self.paddle.top
 
@@ -216,16 +206,12 @@ class BreakoutGame:
         # Draw ball
         pygame.draw.ellipse(self.screen, WHITE, self.ball)
 
-        # Draw bricks with a "subtle border/shadow for depth"
+        # Draw bricks
         for brick in self.bricks:
-            # Shadow/Highlight effect
             r = brick["rect"]
-            # Main brick
             pygame.draw.rect(self.screen, brick["color"], r)
-            # Subtle top-left highlight
             pygame.draw.line(self.screen, WHITE, r.topleft, r.topright, 1)
             pygame.draw.line(self.screen, WHITE, r.topleft, r.bottomleft, 1)
-            # Subtle bottom-right shadow
             pygame.draw.line(self.screen, BLACK, r.bottomleft, r.bottomright, 1)
             pygame.draw.line(self.screen, BLACK, r.topright, r.bottomright, 1)
 
@@ -247,7 +233,7 @@ class BreakoutGame:
                 self.screen.blit(sub, (WIDTH // 2 - sub.get_width() // 2, HEIGHT // 2 + 40))
             
             if self.win:
-                txt = self.large_font.render("YOU WIN!", True, GREEN)
+                txt = self.large_font.render("YOU WIN!", True, YELLOW)
                 sub = self.font.render("Press 'R' to Restart", True, WHITE)
                 self.screen.blit(txt, (WIDTH // 2 - txt.get_width() // 2, HEIGHT // 2 - 50))
                 self.screen.blit(sub, (WIDTH // 2 - sub.get_width() // 2, HEIGHT // 2 + 40))
